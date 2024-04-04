@@ -1,0 +1,196 @@
+{
+   . Una oficina requiere el procesamiento de los reclamos de las personas. De cada reclamo
+se lee código, DNI de la persona, año y tipo de reclamo. La lectura finaliza con el código de
+igual a -1. Se pide:
+a) Un módulo que retorne estructura adecuada para la búsqueda por DNI. Para cada DNI
+se deben tener almacenados cada reclamo y la cantidad total de reclamos que realizó.
+b) Un módulo que reciba la estructura generada en a) y un DNI y retorne la cantidad de
+reclamos efectuados por ese DNI.
+c) Un módulo que reciba la estructura generada en a) y dos DNI y retorne la cantidad de
+reclamos efectuados por todos los DNI comprendidos entre los dos DNI recibidos.
+d) Un módulo que reciba la estructura generada en a) y un año y retorne los códigos de
+los reclamos realizados en el año recibido. 
+   
+}
+
+
+program repaso4;
+type
+	
+	reclamo = record
+		cod: integer;
+		dni: integer;
+		anio: integer;
+		tipo: integer;
+	end;
+	
+	reclamoDni = record
+		cod,anio,tipo: integer;
+	end; 
+	
+	lista = ^nodoL;
+	nodoL = record
+		dato: reclamoDni; 
+		sig: lista;
+	end;
+	
+	arbol = ^nodoA;
+	nodoA = record
+		dni: integer;
+		dato: lista;
+		cant: integer;
+		hi,hd: arbol;
+	end;
+	
+	listaAnio = ^nodoAnio;
+	nodoAnio = record
+		dato: integer;
+		sig: listaAnio;
+	end;
+	
+procedure leerReclamo(var r: reclamo);
+begin
+	readln(r.cod);
+	if(r.cod <> -1) then begin
+		readln(r.anio);
+		readln(r.tipo);
+		readln(r.dni);
+	end;
+end;
+
+procedure agregarLista(var l:lista; r:reclamo);
+var
+	nue: lista;
+begin
+	new(nue);
+	l^.dato.cod:= r.cod;
+	l^.dato.tipo:= r.tipo;
+	l^.dato.anio:= r.anio;
+	l^.sig:= l;
+	l:= nue;
+end;	
+
+procedure agregarReclamo(var a:arbol; r:reclamo);
+begin
+	if(a = nil) then begin
+		new(a);
+		a^.dni:= r.dni;
+		a^.dato:= nil;
+		agregarLista(a^.dato,r);
+		a^.cant:= 1;
+		a^.hi:= nil;
+		a^.hd:= nil;
+	end
+	else
+		if(a^.dni = r.dni) then begin
+			agregarLista(a^.dato,r);
+			a^.cant:= a^.cant + 1;
+		end	
+		else
+			if(r.dni < a^.dni) then
+				agregarReclamo(a^.hi,r)
+			else
+				agregarReclamo(a^.hd,r)	
+end;
+
+procedure generarArbol(var a:arbol);
+var
+	r: reclamo;
+begin
+	leerReclamo(r);
+	while(r.cod <> -1) do begin
+		agregarReclamo(a,r);
+		leerReclamo(r);
+	end;
+end;
+
+function buscar(a:arbol; x:integer):integer;
+begin
+	if(a = nil) then
+		buscar:= -1
+	else 
+		if(a^.dni = x) then
+			buscar:= a^.cant
+		else
+			if(x < a^.dni) then
+				buscar:= buscar(a^.hi,x)
+			else
+				buscar:= buscar(a^.hd,x)		
+end;
+
+procedure cuantosReclamos(a:arbol; var x:integer);
+var 
+	y:integer;
+begin
+	readln(y);
+	x:=buscar(a,y);
+end;
+
+function contar(a:arbol; x,y:integer ):integer;
+begin
+	if(a = nil )then 
+		contar:= 0
+	else begin
+		if(x < a^.dni) then
+			if(y > a^.dni) then
+				contar:= 1 + contar(a^.hi,x,y) + contar(a^.hd,x,y)
+			else
+				contar:= contar(a^.hi,x,y)	
+		else
+			contar:= contar(a^.hd,x,y)
+	end;	
+end;
+
+procedure cuantosReclamosEntre(a:arbol; var x:integer );
+var
+	y,z:integer;
+begin
+	readln(y);
+	readln(z);
+	x:= contar(a,y,z);
+end;
+
+procedure agregarListaAnio(var l:listaAnio; x:integer);
+var
+	nue: listaAnio;
+begin
+	new(nue);
+	l^.dato:= x;
+	l^.sig:= l;
+	l:= nue;
+end;
+
+procedure generarLista(a:arbol;var l:listaAnio);
+begin
+	if(a <> nil) then
+		generarLista(a^.hi,l);
+		while(a^.dato <> nil) do begin
+			agregarListaAnio(l,a^.dato^.dato.cod);
+			a^.dato:= a^.dato^.sig;	
+			end;
+		generarLista(a^.hd,l);
+end;
+ 
+
+var 
+	a: arbol;
+	y,x: integer;
+	l: listaAnio;
+BEGIN
+	generarArbol(a);
+	if (a = nil) then
+		writeln('arbol vacio')
+	else begin
+		x:= 0;
+		y:= 0;
+		l:= nil;
+		cuantosReclamos(a,x);
+		cuantosReclamosEntre(a,y);
+		generarLista(a,l);
+		if (x = -1)then
+			writeln('no se encontro el dni')
+		else
+			writeln(x);	
+	end;
+END.
+
