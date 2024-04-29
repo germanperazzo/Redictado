@@ -17,11 +17,16 @@ public abstract class Figura {
     
     public String toString(){
         String aux = "Area: " + this.calcularArea() +
+                     "Premimetro: " + this.calcularPerimetro() +
                      " CR: "  + getColorRelleno() + 
                       " CL: " + getColorLinea();             
              return aux;
        }
 
+    public void desPintar(){
+        this.colorLinea = "negra";
+        this.colorRelleno ="blanco";
+    }
     
     public String getColorRelleno(){
         return colorRelleno;       
